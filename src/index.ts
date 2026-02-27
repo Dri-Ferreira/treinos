@@ -1,33 +1,60 @@
 import "dotenv/config";
 
+import fastifySwagger from "@fastify/swagger";
+import fastifySwaggerUI from "@fastify/swagger-ui";
 import Fastify from "fastify";
-import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  ZodTypeProvider,
+} from "fastify-type-provider-zod";
 import z from "zod";
-const app= Fastify({
+const app = Fastify({
   logger: true,
 });
 
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 
+await app.register(fastifySwagger, {
+  openapi: {
+    info: {
+      title: "Treinos API",
+      description: "API para gerenciamento de treinos",
+      version: "1.0.0",
+    },
+    servers: [
+      {
+        description: "Localhost",
+        url: "http://localhost:8081",
+      },
+    ],
+  },
+  transform: jsonSchemaTransform,
+});
+
+await app.register(fastifySwaggerUI, {
+  routePrefix: "/docs",
+});
 
 app.withTypeProvider<ZodTypeProvider>().route({
-  method: 'GET',
- url:"/",
- schema:{
+  method: "GET",
+  url: "/",
+  schema: {
     description: "Hello World",
     tags: ["Hello World "],
     response: {
-        200: z.object({
-            message: z.string(),
-        })
-    }
- },
- handler: () => { 
+      200: z.object({
+        message: z.string(),
+      }),
+    },
+  },
+  handler: () => {
     return {
-        message: "Hello World"
-    }
- }
+      message: "Hello World",
+    };
+  },
 });
 
 try {
